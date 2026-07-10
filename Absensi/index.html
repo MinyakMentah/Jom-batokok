@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Jom Batokok — Absensi Karyawan</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#3a0505" />
+  <meta name="description" content="Aplikasi absensi karyawan internal Jom Batokok" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Jom Batokok" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Ambient background layers -->
+  <div class="bg-layer bg-gradient"></div>
+  <div class="bg-layer bg-noise"></div>
+  <div class="bg-layer bg-vignette"></div>
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="page-layout">
+
+  <div class="app-shell">
+
+    <!-- ===== HEADER / LOGO ===== -->
+    <header class="brand-header">
+      <div class="brand-mark">
+        <img src="logo-full.png" alt="Jom Batokok Dendeng" class="brand-logo-full" />
+      </div>
+      <p class="brand-subtitle">Sistem Absensi Karyawan</p>
+    </header>
+
+    <!-- ===== MAIN CARD (glassmorphism container) ===== -->
+    <main class="glass-card" id="mainCard">
+
+      <!-- Progress indicator -->
+      <div class="step-indicator" id="stepIndicator" aria-hidden="true">
+        <span class="step-dot active" data-step="1"></span>
+        <span class="step-line"></span>
+        <span class="step-dot" data-step="2"></span>
+        <span class="step-line"></span>
+        <span class="step-dot" data-step="3"></span>
+        <span class="step-line"></span>
+        <span class="step-dot" data-step="4"></span>
+      </div>
+
+      <!-- ===== STEP 1: PILIH LOKASI ===== -->
+      <section class="step-panel active" id="step-1" data-step-panel="1">
+        <div class="panel-heading">
+          <span class="eyebrow">Langkah 1 dari 3</span>
+          <h2>Pilih Lokasi Kerja</h2>
+          <p class="panel-desc">Silakan pilih cabang tempat Anda bertugas hari ini.</p>
+        </div>
+
+        <div class="location-grid" id="locationGrid">
+          <button class="location-btn" data-location="Jom Sinpasa" type="button">
+            <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>
+            <span class="location-name">Jom Sinpasa</span>
+          </button>
+          <button class="location-btn" data-location="Jom Santa" type="button">
+            <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>
+            <span class="location-name">Jom Santa</span>
+          </button>
+          <button class="location-btn" data-location="Jom Galaxy" type="button">
+            <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>
+            <span class="location-name">Jom Galaxy</span>
+          </button>
+          <button class="location-btn" data-location="Central Kitchen" type="button">
+            <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a2.5 2.5 0 0 1 0 5h-1"/><path d="M2 8h16v7a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><path d="M6 1v3M10 1v3M14 1v3"/></svg>
+            <span class="location-name">Central Kitchen</span>
+          </button>
+          <button class="location-btn location-btn-wide" data-location="Office Puri" type="button">
+            <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+            <span class="location-name">Office Puri</span>
+          </button>
+        </div>
+
+        <!-- Status pemeriksaan lokasi (geofencing) -->
+        <div class="geo-status" id="geoStatus" hidden>
+          <div class="geo-checking" id="geoChecking">
+            <span class="spinner"></span>
+            <span>Memeriksa lokasi Anda...</span>
+          </div>
+          <div class="geo-error" id="geoError" hidden>
+            <svg class="geo-error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            <p id="geoErrorText">-</p>
+            <div class="geo-error-actions">
+              <button type="button" id="geoRetryBtn" class="ghost-btn">Coba Lagi</button>
+              <button type="button" id="geoCancelBtn" class="ghost-btn">Pilih Lokasi Lain</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== STEP 2: PILIH NAMA & STATUS ===== -->
+      <section class="step-panel" id="step-2" data-step-panel="2">
+        <div class="panel-heading">
+          <button class="back-btn" type="button" data-back-to="1" aria-label="Kembali">←</button>
+          <span class="eyebrow">Langkah 2 dari 3</span>
+          <h2>Lokasi: <span class="active-location" id="activeLocationName">-</span></h2>
+          <p class="panel-desc">Pilih nama Anda dan tentukan status absensi.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="employeeSelect">Nama Karyawan</label>
+          <div class="select-wrapper">
+            <select id="employeeSelect" required>
+              <option value="" disabled selected>-- Pilih Nama --</option>
+            </select>
+            <span class="select-caret">▾</span>
+          </div>
+        </div>
+
+        <div class="form-group" id="manualNameGroup" hidden>
+          <label for="manualNameInput">Ketik Nama Karyawan</label>
+          <input type="text" id="manualNameInput" placeholder="Contoh: Budi (karyawan baru/titipan)" autocomplete="off" />
+        </div>
+
+        <div class="action-grid">
+          <button class="action-btn btn-masuk" type="button" data-status="MASUK">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+            <span>Absen MASUK</span>
+          </button>
+          <button class="action-btn btn-keluar" type="button" data-status="KELUAR">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+            <span>Absen KELUAR</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== STEP 3: VERIFIKASI KAMERA ===== -->
+      <section class="step-panel" id="step-3" data-step-panel="3">
+        <div class="panel-heading">
+          <button class="back-btn" type="button" data-back-to="2" aria-label="Kembali">←</button>
+          <span class="eyebrow">Langkah 3 dari 3</span>
+          <h2>Verifikasi Selfie</h2>
+          <p class="panel-desc">Posisikan wajah Anda di dalam bingkai lalu ambil foto.</p>
+        </div>
+
+        <div class="summary-chip" id="summaryChip">
+          <span id="summaryText">-</span>
+        </div>
+
+        <div class="camera-frame">
+          <video id="cameraPreview" autoplay playsinline muted></video>
+          <div class="camera-ring"></div>
+          <canvas id="captureCanvas" hidden></canvas>
+        </div>
+
+        <div class="camera-error" id="cameraError" hidden>
+          <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          Tidak dapat mengakses kamera. Periksa izin kamera pada browser Anda.
+        </div>
+
+        <button class="capture-btn" id="captureBtn" type="button">
+          <svg class="capture-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Ambil Foto &amp; Kirim</span>
+        </button>
+
+        <div class="sending-indicator" id="sendingIndicator" hidden>
+          <span class="spinner"></span>
+          <span>Mengirim data absensi...</span>
+        </div>
+      </section>
+
+      <!-- ===== STEP 4: SUKSES ===== -->
+      <section class="step-panel" id="step-4" data-step-panel="4">
+        <div class="success-content">
+          <div class="success-check">
+            <svg viewBox="0 0 52 52" class="checkmark">
+              <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
+              <path class="checkmark-tick" fill="none" d="M14 27l7 7 16-16"/>
+            </svg>
+          </div>
+          <h2 class="success-title">Absensi Berhasil!</h2>
+          <p class="success-detail" id="successDetail">-</p>
+          <div class="success-progress">
+            <div class="success-progress-bar" id="successProgressBar"></div>
+          </div>
+          <p class="success-note">Kembali ke layar utama...</p>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <p>© 2026 Jom Batokok · Internal Use Only</p>
+    </footer>
+  </div>
+
+  <!-- ===== LEADERBOARD: Absen Hari Ini ===== -->
+  <aside class="leaderboard-panel" id="leaderboardPanel">
+    <div class="leaderboard-header">
+      <svg class="leaderboard-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-6"/></svg>
+      <div>
+        <h3>Absen Hari Ini</h3>
+        <p id="leaderboardDate">-</p>
+      </div>
+    </div>
+    <div class="leaderboard-list" id="leaderboardList">
+      <p class="leaderboard-empty" id="leaderboardEmpty">Belum ada yang absen hari ini.</p>
+    </div>
+  </aside>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
