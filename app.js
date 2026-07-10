@@ -25,7 +25,7 @@ const LOCATIONS_GEO = {
   "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 500 },
   "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 500 },
   "Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 500 }, 
-  "Office Puri": { lat: -6241942, lng: 107.026632, radiusMeters: 500 }, 
+  "Office Puri": { lat: -6.241856, lng: 107.026529, radiusMeters: 500 }, 
 };
 
 /**
