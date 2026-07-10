@@ -9,18 +9,6 @@
 const GOOGLE_SCRIPT_URL = "YOUR_APP_SCRIPT_URL_HERE";
 
 /* ---------------------------------------------------------
-   CONFIG — Data karyawan per lokasi
-   Tambah/kurangi nama di sini kapan saja.
-   --------------------------------------------------------- */
-const EMPLOYEES_BY_LOCATION = {
-  "Jom Sinpasa": ["Dimas", "Bu Ade", "Zharfa"],
-  "Jom Santa": ["Kak Awa", "Dema"],
-  "Jom Galaxy": ["Ceu Yuyun", "Bu Tegar", "Wahyu", "Akhyar", "Yuli"],
-  "Central Kitchen": ["Fajri", "Etty", "Rini", "Muflihah", "Yuliati", "Nia"],
-  "Office Puri": ["Mak Fajri"],
-};
-
-/* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
    Koordinat 3 cabang di bawah ini diambil dari data resmi
    "Jom Batokok" di Google Maps. Untuk "Central Kitchen",
@@ -33,11 +21,11 @@ const EMPLOYEES_BY_LOCATION = {
    itu otomatis DILEWATI (tidak diblokir).
    --------------------------------------------------------- */
 const LOCATIONS_GEO = {
-  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 200 },
-  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 200 },
-  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 200 },
-  "Central Kitchen": { lat: null, lng: null, radiusMeters: 200 }, // TODO: isi koordinat asli dapur
-  "Office Puri": { lat: null, lng: null, radiusMeters: 200 }, // TODO: isi koordinat asli kantor
+  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 500 },
+  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 500 },
+  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 500 },
+  "Central Kitchen": { lat: null, lng: null, radiusMeters: 500 }, // TODO: isi koordinat asli dapur
+  "Office Puri": { lat: null, lng: null, radiusMeters: 500 }, // TODO: isi koordinat asli kantor
 };
 
 /**
@@ -125,9 +113,7 @@ const els = {
   geoRetryBtn: document.getElementById("geoRetryBtn"),
   geoCancelBtn: document.getElementById("geoCancelBtn"),
 
-  employeeSelect: document.getElementById("employeeSelect"),
-  manualNameGroup: document.getElementById("manualNameGroup"),
-  manualNameInput: document.getElementById("manualNameInput"),
+  employeeNameInput: document.getElementById("employeeNameInput"),
   actionButtons: document.querySelectorAll(".action-btn"),
 
   summaryText: document.getElementById("summaryText"),
@@ -199,8 +185,6 @@ els.locationGrid.addEventListener("click", (e) => {
 
   state.location = btn.dataset.location;
   els.activeLocationName.textContent = state.location;
-  populateEmployeeDropdown(state.location);
-
   runGeofenceCheck(state.location);
 });
 
@@ -262,72 +246,17 @@ els.geoCancelBtn.addEventListener("click", () => {
   hideGeoStatus();
 });
 
-const OTHER_OPTION_VALUE = "__LAINNYA__";
-
-function populateEmployeeDropdown(location) {
-  const ownEmployees = EMPLOYEES_BY_LOCATION[location] || [];
-
-  els.employeeSelect.innerHTML = '<option value="" disabled selected>-- Pilih Nama --</option>';
-
-  ownEmployees.forEach((name) => {
-    const option = document.createElement("option");
-    option.value = name;
-    option.textContent = name;
-    els.employeeSelect.appendChild(option);
-  });
-
-  const manualOption = document.createElement("option");
-  manualOption.value = OTHER_OPTION_VALUE;
-  manualOption.textContent = "-- Karyawan Cabang Lain / Lainnya (ketik manual) --";
-  els.employeeSelect.appendChild(manualOption);
-
-  hideManualNameInput();
-}
-
-function showManualNameInput() {
-  els.manualNameGroup.hidden = false;
-  els.manualNameInput.value = "";
-  els.manualNameInput.focus();
-}
-
-function hideManualNameInput() {
-  els.manualNameGroup.hidden = true;
-  els.manualNameInput.value = "";
-}
-
-els.employeeSelect.addEventListener("change", () => {
-  if (els.employeeSelect.value === OTHER_OPTION_VALUE) {
-    showManualNameInput();
-  } else {
-    hideManualNameInput();
-  }
-});
-
-/**
- * Mengambil nama karyawan yang dipilih, entah dari dropdown atau input manual.
- */
-function getSelectedEmployeeName() {
-  const selectedValue = els.employeeSelect.value;
-  if (selectedValue === OTHER_OPTION_VALUE) {
-    return els.manualNameInput.value.trim();
-  }
-  return selectedValue;
-}
-
 /* ---------------------------------------------------------
    STEP 2 — PILIH NAMA & STATUS
    --------------------------------------------------------- */
 els.actionButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    const employeeName = getSelectedEmployeeName();
+    const employeeName = els.employeeNameInput.value.trim();
 
     if (!employeeName) {
-      const fieldToFocus = els.employeeSelect.value === OTHER_OPTION_VALUE
-        ? els.manualNameInput
-        : els.employeeSelect;
-      fieldToFocus.focus();
-      fieldToFocus.style.borderColor = "var(--danger)";
-      setTimeout(() => (fieldToFocus.style.borderColor = ""), 900);
+      els.employeeNameInput.focus();
+      els.employeeNameInput.style.borderColor = "var(--danger)";
+      setTimeout(() => (els.employeeNameInput.style.borderColor = ""), 900);
       return;
     }
 
@@ -480,13 +409,12 @@ function resetToStepOne() {
 
   // Reset UI
   document.querySelectorAll(".location-btn").forEach((b) => b.classList.remove("selected"));
-  els.employeeSelect.innerHTML = '<option value="" disabled selected>-- Pilih Nama --</option>';
+  els.employeeNameInput.value = "";
   els.activeLocationName.textContent = "-";
   els.summaryText.textContent = "-";
   els.captureBtn.disabled = false;
   hideGeoStatus();
   setLocationGridDisabled(false);
-  hideManualNameInput();
 
   goToStep(1);
 }
@@ -647,7 +575,7 @@ function addToLeaderboard(entry) {
 }
 
 /* ---------------------------------------------------------
-INIT
+   INIT
    --------------------------------------------------------- */
 updateStepIndicator(1);
 cleanupOldLeaderboardEntries();
