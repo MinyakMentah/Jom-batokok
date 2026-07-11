@@ -6,7 +6,7 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVcR7xS0R9IZke2gvpvQ1joXdsW7eBDnMbfygUQYuUNqGLaIwUsDgcD56ClXhoGz11oA/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdsuXVd4twdcRX8wI_kpH1Tm2kturj46xfOONCTrxwGyUF5wgFDtNK-ourdb0UrCD5Vg/exec";
 
 /* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
@@ -20,6 +20,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVcR7xS0R9IZ
    Kalau lat/lng diisi `null`, pengecekan lokasi untuk cabang
    itu otomatis DILEWATI (tidak diblokir).
    --------------------------------------------------------- */
+
 const LOCATIONS_GEO = {
   "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 500 },
   "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 500 },
@@ -338,12 +339,9 @@ els.captureBtn.addEventListener("click", async () => {
     // no-cors mode tidak memberi kita status respons yang jelas,
     // jadi kita tetap lanjutkan alur UX ke layar sukses.
   } finally {
-    addToLeaderboard({
-      nama: state.employeeName,
-      cabang: state.location,
-      status: state.status,
-      timestamp: state.timestamp,
-    });
+    // Refresh leaderboard dari Sheets — begitu doPost selesai nulis baris,
+    // baris itu udah ada di Sheet, jadi langsung ke-tarik lagi ke sini.
+    fetchLeaderboard();
     els.sendingIndicator.hidden = true;
     stopCamera();
     showSuccessScreen();
@@ -458,10 +456,17 @@ if ("serviceWorker" in navigator) {
 
 /* ---------------------------------------------------------
    LEADERBOARD — "Absen Hari Ini"
-   Cuma ditampilkan real-time di kiosk ini, TIDAK mengambil
-   data dari Sheet. Otomatis kosong lagi besok (per tanggal).
+   Sekarang datanya DITARIK dari Google Sheets (lewat doGet di
+   Code.gs), bukan disimpan sendiri-sendiri per HP lagi. Jadi
+   semua HP di semua cabang lihat leaderboard yang SAMA.
+
+   - Otomatis di-refresh tiap LEADERBOARD_REFRESH_MS.
+   - Cuma nampilin entri HARI INI (difilter di server/Code.gs),
+     jadi otomatis "kosong lagi" besok tanpa perlu hapus manual.
+   - Berhenti polling kalau tab/app lagi disembunyikan (hemat
+     baterai & kuota), lanjut lagi begitu dibuka lagi.
    --------------------------------------------------------- */
-const LEADERBOARD_PREFIX = "jombatokok_leaderboard_";
+const LEADERBOARD_REFRESH_MS = 20000; // 20 detik
 
 const BULAN_INDO = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -469,41 +474,11 @@ const BULAN_INDO = [
 ];
 const HARI_INDO = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
-function getTodayKey() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${LEADERBOARD_PREFIX}${y}-${m}-${d}`;
-}
+let leaderboardTimer = null;
 
 function getTodayLabel() {
   const now = new Date();
   return `${HARI_INDO[now.getDay()]}, ${now.getDate()} ${BULAN_INDO[now.getMonth()]} ${now.getFullYear()}`;
-}
-
-function getTodayEntries() {
-  try {
-    const raw = localStorage.getItem(getTodayKey());
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveTodayEntries(entries) {
-  localStorage.setItem(getTodayKey(), JSON.stringify(entries));
-}
-
-/**
- * Buang data leaderboard hari-hari sebelumnya supaya localStorage
- * gak numpuk terus (sesuai permintaan: gak perlu disimpan lama-lama).
- */
-function cleanupOldLeaderboardEntries() {
-  const todayKey = getTodayKey();
-  Object.keys(localStorage)
-    .filter((key) => key.startsWith(LEADERBOARD_PREFIX) && key !== todayKey)
-    .forEach((key) => localStorage.removeItem(key));
 }
 
 function getInitials(name) {
@@ -518,6 +493,12 @@ function formatJamMenit(isoString) {
   const jam = String(d.getHours()).padStart(2, "0");
   const menit = String(d.getMinutes()).padStart(2, "0");
   return `${jam}:${menit}`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function createLeaderboardItemEl(entry) {
@@ -540,19 +521,15 @@ function createLeaderboardItemEl(entry) {
   return item;
 }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function renderLeaderboard() {
-  const entries = getTodayEntries();
-
+/**
+ * Render ulang tampilan leaderboard dari array entries yang
+ * sudah didapat dari server (Google Sheets).
+ */
+function renderLeaderboard(entries) {
   els.leaderboardDate.textContent = getTodayLabel();
   els.leaderboardList.innerHTML = "";
 
-  if (entries.length === 0) {
+  if (!entries || entries.length === 0) {
     const empty = document.createElement("p");
     empty.className = "leaderboard-empty";
     empty.id = "leaderboardEmpty";
@@ -561,22 +538,65 @@ function renderLeaderboard() {
     return;
   }
 
-  // terbaru di atas
-  [...entries].reverse().forEach((entry) => {
+  // urutkan terbaru di atas (jaga-jaga kalau urutan dari Sheet belum urut)
+  const sorted = [...entries].sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  );
+
+  sorted.forEach((entry) => {
     els.leaderboardList.appendChild(createLeaderboardItemEl(entry));
   });
 }
 
-function addToLeaderboard(entry) {
-  const entries = getTodayEntries();
-  entries.push(entry);
-  saveTodayEntries(entries);
-  renderLeaderboard();
+/**
+ * Ambil data "Absen Hari Ini" dari Google Sheets lewat doGet.
+ */
+async function fetchLeaderboard() {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_APP_SCRIPT_URL_HERE") {
+    els.leaderboardDate.textContent = getTodayLabel();
+    els.leaderboardEmpty.textContent =
+      "GOOGLE_SCRIPT_URL belum diatur di app.js.";
+    return;
+  }
+
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, { method: "GET" });
+    const json = await response.json();
+
+    if (json.result === "success") {
+      renderLeaderboard(json.data);
+    } else {
+      console.warn("Gagal ambil leaderboard:", json.message);
+    }
+  } catch (err) {
+    console.warn("Gagal fetch leaderboard (cek koneksi internet):", err);
+  }
 }
+
+function startLeaderboardPolling() {
+  fetchLeaderboard(); // langsung ambil sekali pas dipanggil
+  if (leaderboardTimer) clearInterval(leaderboardTimer);
+  leaderboardTimer = setInterval(fetchLeaderboard, LEADERBOARD_REFRESH_MS);
+}
+
+function stopLeaderboardPolling() {
+  if (leaderboardTimer) {
+    clearInterval(leaderboardTimer);
+    leaderboardTimer = null;
+  }
+}
+
+// Hemat baterai/kuota: berhenti polling kalau tab disembunyikan
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopLeaderboardPolling();
+  } else {
+    startLeaderboardPolling();
+  }
+});
 
 /* ---------------------------------------------------------
    INIT
    --------------------------------------------------------- */
 updateStepIndicator(1);
-cleanupOldLeaderboardEntries();
-renderLeaderboard();
+startLeaderboardPolling();
