@@ -6,7 +6,7 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdsuXVd4twdcRX8wI_kpH1Tm2kturj46xfOONCTrxwGyUF5wgFDtNK-ourdb0UrCD5Vg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi1nT-XEhVsc5s6qLfeamcZmtn15pAWahKkFJMyXxYbLtKXnBi_NXMBGBC5rW58O6_KQ/exec";
 
 /* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
