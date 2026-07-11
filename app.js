@@ -22,11 +22,11 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi1nT-XEhVsc
    --------------------------------------------------------- */
 
 const LOCATIONS_GEO = {
-  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 500 },
-  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 500 },
-  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 500 },
-  "Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 500 }, 
-  "Office Puri": { lat: -6.241856, lng: 107.026529, radiusMeters: 500 }, 
+  "Jom Sinpasa": { lat: -6.229468, lng: 107.000581, radiusMeters: 70 },
+  "Jom Santa": { lat: -6.239869, lng: 106.812129, radiusMeters: 70 },
+  "Jom Galaxy": { lat: -6.274842, lng: 106.973364, radiusMeters: 70 },
+  "Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 70 }, 
+  "Office Puri": { lat: -6.241870, lng: 107.026397, radiusMeters: 70 }, 
 };
 
 /**
