@@ -649,7 +649,42 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scaleX(-1); /* mirror front camera */
+}
+
+#cameraPreview.mirrored {
+  transform: scaleX(-1); /* mirror kamera depan biar gerakannya intuitif */
+}
+
+.camera-flip-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease), background 0.25s var(--ease);
+  z-index: 2;
+}
+
+.camera-flip-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.camera-flip-btn:hover {
+  background: rgba(0,0,0,0.65);
+}
+
+.camera-flip-btn:active {
+  transform: scale(0.9) rotate(180deg);
 }
 
 .camera-ring {

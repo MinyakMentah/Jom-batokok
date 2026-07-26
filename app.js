@@ -20,13 +20,12 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi1nT-XEhVsc
    Kalau lat/lng diisi `null`, pengecekan lokasi untuk cabang
    itu otomatis DILEWATI (tidak diblokir).
    --------------------------------------------------------- */
-
 const LOCATIONS_GEO = {
-  "Jom Sinpasa": { lat: -6.229468, lng: 107.000581, radiusMeters: 70 },
-  "Jom Santa": { lat: -6.239869, lng: 106.812129, radiusMeters: 70 },
-  "Jom Galaxy": { lat: -6.274842, lng: 106.973364, radiusMeters: 70 },
-  "Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 70 }, 
-  "Office Puri": { lat: -6.241870, lng: 107.026397, radiusMeters: 70 }, 
+"Jom Sinpasa": { lat: -6.229468, lng: 107.000581, radiusMeters: 70 },
+"Jom Santa": { lat: -6.239869, lng: 106.812129, radiusMeters: 70 },
+"Jom Galaxy": { lat: -6.274842, lng: 106.973364, radiusMeters: 70 },
+"Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 70 }, 
+"Office Puri": { lat: -6.241870, lng: 107.026397, radiusMeters: 70 }, 
 };
 
 /**
@@ -119,6 +118,7 @@ const els = {
 
   summaryText: document.getElementById("summaryText"),
   cameraPreview: document.getElementById("cameraPreview"),
+  cameraFlipBtn: document.getElementById("cameraFlipBtn"),
   captureCanvas: document.getElementById("captureCanvas"),
   cameraError: document.getElementById("cameraError"),
   captureBtn: document.getElementById("captureBtn"),
@@ -274,16 +274,25 @@ els.actionButtons.forEach((btn) => {
 /* ---------------------------------------------------------
    STEP 3 — KAMERA
    --------------------------------------------------------- */
+let currentFacingMode = "user"; // "user" = kamera depan, "environment" = kamera belakang
+
 async function startCamera() {
   els.cameraError.hidden = true;
   els.captureBtn.disabled = false;
 
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 960 } },
+      video: {
+        facingMode: currentFacingMode,
+        width: { ideal: 720 },
+        height: { ideal: 960 },
+      },
       audio: false,
     });
     els.cameraPreview.srcObject = mediaStream;
+
+    // Cuma di-mirror kalau kamera depan, biar kamera belakang gak kebalik aneh
+    els.cameraPreview.classList.toggle("mirrored", currentFacingMode === "user");
   } catch (err) {
     console.error("Camera access error:", err);
     els.cameraError.hidden = false;
@@ -299,6 +308,14 @@ function stopCamera() {
   els.cameraPreview.srcObject = null;
 }
 
+async function flipCamera() {
+  currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+  stopCamera();
+  await startCamera();
+}
+
+els.cameraFlipBtn.addEventListener("click", flipCamera);
+
 function capturePhotoAsBase64() {
   const video = els.cameraPreview;
   const canvas = els.captureCanvas;
@@ -309,9 +326,12 @@ function capturePhotoAsBase64() {
   canvas.height = height;
 
   const ctx = canvas.getContext("2d");
-  // Mirror horizontally to match the preview the user saw
-  ctx.translate(width, 0);
-  ctx.scale(-1, 1);
+
+  if (currentFacingMode === "user") {
+    // Mirror horizontal biar hasil fotonya sama kayak yang keliatan di preview
+    ctx.translate(width, 0);
+    ctx.scale(-1, 1);
+  }
   ctx.drawImage(video, 0, 0, width, height);
 
   return canvas.toDataURL("image/jpeg", 0.85); // "data:image/jpeg;base64,...."
@@ -413,6 +433,7 @@ function resetToStepOne() {
   els.captureBtn.disabled = false;
   hideGeoStatus();
   setLocationGridDisabled(false);
+  currentFacingMode = "user";
 
   goToStep(1);
 }
