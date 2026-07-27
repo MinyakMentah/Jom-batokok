@@ -6,8 +6,7 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxi1nT-XEhVsc5s6qLfeamcZmtn15pAWahKkFJMyXxYbLtKXnBi_NXMBGBC5rW58O6_KQ/exec";
-
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo21Yjqk_ohskU3ExO5klLsPYjVnQ-KbnxDKD-dlO-vEeHgo6ZjdqKvWrKbHDxH6eLwg/exec";
 /* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
    Koordinat 3 cabang di bawah ini diambil dari data resmi
@@ -27,6 +26,7 @@ const LOCATIONS_GEO = {
 "Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 70 }, 
 "Office Puri": { lat: -6.241870, lng: 107.026397, radiusMeters: 70 }, 
 };
+
 
 /**
  * Menghitung jarak antar 2 koordinat (meter) pakai rumus Haversine.
@@ -527,9 +527,18 @@ function createLeaderboardItemEl(entry) {
   item.className = "leaderboard-item";
 
   const badgeClass = entry.status === "MASUK" ? "badge-masuk" : "badge-keluar";
+  const initials = getInitials(entry.nama);
+
+  // Kalau ada foto, tampilin fotonya. Kalau gak ada / gagal ke-load
+  // (misal foto lagi di-proses/link belum aktif), otomatis balik ke
+  // lingkaran inisial huruf biar gak ada kotak gambar rusak.
+  const avatarHtml = entry.foto
+    ? `<img class="leaderboard-avatar-img" src="${escapeHtml(entry.foto)}" alt="${escapeHtml(entry.nama)}"
+         onerror="this.outerHTML='<div class=&quot;leaderboard-avatar&quot;>${initials}</div>'" />`
+    : `<div class="leaderboard-avatar">${initials}</div>`;
 
   item.innerHTML = `
-    <div class="leaderboard-avatar">${getInitials(entry.nama)}</div>
+    ${avatarHtml}
     <div class="leaderboard-info">
       <div class="leaderboard-name">${escapeHtml(entry.nama)}</div>
       <div class="leaderboard-meta">${escapeHtml(entry.cabang)}</div>

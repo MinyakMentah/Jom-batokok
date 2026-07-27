@@ -981,6 +981,16 @@ body {
   background: linear-gradient(150deg, var(--gold-soft), var(--gold));
 }
 
+.leaderboard-avatar-img {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(227, 179, 79, 0.5);
+  background: #1a0303; /* placeholder gelap selagi foto loading */
+}
+
 .leaderboard-info {
   flex: 1;
   min-width: 0;
