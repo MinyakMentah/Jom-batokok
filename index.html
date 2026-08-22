@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Jom Batokok — Absensi Tim Jom</title>
+  <title>Jom Batokok — Absensi</title>
 
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#3a0505" />
@@ -63,8 +63,8 @@
       <section class="step-panel active" id="step-1" data-step-panel="1">
         <div class="panel-heading">
           <span class="eyebrow">Langkah 1 dari 3</span>
-          <h2>Pilih Lokasi Anda</h2>
-          <p class="panel-desc">Silakan pilih cabang tempat Anda bertugas hari ini.</p>
+          <h2>Pilih Lokasi Kerja</h2>
+          <p class="panel-desc">Silakan pilih Tempat Anda bertugas hari ini.</p>
         </div>
 
         <div class="location-grid" id="locationGrid">
@@ -113,22 +113,23 @@
           <button class="back-btn" type="button" data-back-to="1" aria-label="Kembali">←</button>
           <span class="eyebrow">Langkah 2 dari 3</span>
           <h2>Lokasi: <span class="active-location" id="activeLocationName">-</span></h2>
-          <p class="panel-desc">Pilih nama Anda dan tentukan status absensi.</p>
+          <p class="panel-desc">Pilih nama Anda dan tentukan status absensinya.</p>
         </div>
 
         <div class="form-group">
-          <label for="employeeNameInput">Name</label>
-          <input type="text" id="employeeNameInput" placeholder="Ketik nama Anda" autocomplete="off" autocapitalize="words" />
+          <label for="employeeNameInput">Nama Anda</label>
+          <input type="text" id="employeeNameInput" list="employeeNamesList" placeholder="Wajib Pilih jangan ketik sendiri" autocomplete="off" autocapitalize="words" />
+          <datalist id="employeeNamesList"></datalist>
         </div>
 
         <div class="action-grid">
           <button class="action-btn btn-masuk" type="button" data-status="MASUK">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
-            <span>MASUK</span>
+            <span>Absen MASUK</span>
           </button>
           <button class="action-btn btn-keluar" type="button" data-status="KELUAR">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
-            <span>KELUAR</span>
+            <span>Absen KELUAR</span>
           </button>
         </div>
       </section>
@@ -138,8 +139,8 @@
         <div class="panel-heading">
           <button class="back-btn" type="button" data-back-to="2" aria-label="Kembali">←</button>
           <span class="eyebrow">Langkah 3 dari 3</span>
-          <h2>Verifikasi Terakhir</h2>
-          <p class="panel-desc">Posisikan kamera anda lalu ambil foto</p>
+          <h2>Verifikasi Via Selfie</h2>
+          <p class="panel-desc">Posisikan wajah Anda di dalam bingkai lalu ambil foto.</p>
         </div>
 
         <div class="summary-chip" id="summaryChip">
@@ -159,7 +160,6 @@
           <svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
           Tidak dapat mengakses kamera. Periksa izin kamera pada browser Anda.
         </div>
-
 
         <button class="capture-btn" id="captureBtn" type="button">
           <svg class="capture-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>

@@ -6,7 +6,24 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo21Yjqk_ohskU3ExO5klLsPYjVnQ-KbnxDKD-dlO-vEeHgo6ZjdqKvWrKbHDxH6eLwg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwShVgzGLwUpUwFz3lu-2rA-Cxa3wHcHMwnGZ_idRwOfxi8SLKdAFwq5lDLEYFzvD1_dg/exec";
+
+/* ---------------------------------------------------------
+   CONFIG — Master daftar nama karyawan (SEMUA cabang digabung)
+   Ini CUMA buat saran autocomplete pas ngetik (biar gak typo),
+   BUKAN validasi wajib pilih dari sini — karyawan tetap bisa
+   ngetik nama lain kalau memang belum ada di daftar ini.
+
+   Tambah/kurangi nama di sini kapan aja kalau ada karyawan
+   baru/keluar.
+   --------------------------------------------------------- */
+const MASTER_EMPLOYEE_NAMES = [
+  "Dimas", "Bu Ade", "Zharfa",
+  "Awa", "Dema",
+  "Yuyun", "Widya", "Ahyar", "Ridwan", "Yuli",
+  "Sawitri", "Etty", "Rini", "Nia", "Yuliati", "Muflihah",
+];
+
 /* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
    Koordinat 3 cabang di bawah ini diambil dari data resmi
@@ -26,7 +43,6 @@ const LOCATIONS_GEO = {
 "Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 70 }, 
 "Office Puri": { lat: -6.241870, lng: 107.026397, radiusMeters: 70 }, 
 };
-
 
 /**
  * Menghitung jarak antar 2 koordinat (meter) pakai rumus Haversine.
@@ -114,6 +130,7 @@ const els = {
   geoCancelBtn: document.getElementById("geoCancelBtn"),
 
   employeeNameInput: document.getElementById("employeeNameInput"),
+  employeeNamesList: document.getElementById("employeeNamesList"),
   actionButtons: document.querySelectorAll(".action-btn"),
 
   summaryText: document.getElementById("summaryText"),
@@ -250,9 +267,16 @@ els.geoCancelBtn.addEventListener("click", () => {
 /* ---------------------------------------------------------
    STEP 2 — PILIH NAMA & STATUS
    --------------------------------------------------------- */
+
+function cleanupTypedName(rawName) {
+  let name = rawName.trim().replace(/\s+/g, " ");
+  name = name.replace(/(.)\1{2,}/g, "$1");
+  return name;
+}
+
 els.actionButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    const employeeName = els.employeeNameInput.value.trim();
+    const employeeName = cleanupTypedName(els.employeeNameInput.value);
 
     if (!employeeName) {
       els.employeeNameInput.focus();
@@ -372,7 +396,7 @@ els.captureBtn.addEventListener("click", async () => {
    KIRIM DATA KE GOOGLE APPS SCRIPT (Google Sheets backend)
    --------------------------------------------------------- */
 async function sendAttendanceToServer(payload) {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_APP_SCRIPT_URL_HERE") {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwShVgzGLwUpUwFz3lu-2rA-Cxa3wHcHMwnGZ_idRwOfxi8SLKdAFwq5lDLEYFzvD1_dg/exec") {
     console.warn(
       "GOOGLE_SCRIPT_URL belum diatur. Data tidak benar-benar terkirim ke server.",
       payload
@@ -509,11 +533,14 @@ function getInitials(name) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-function formatJamMenit(isoString) {
-  const d = new Date(isoString);
-  const jam = String(d.getHours()).padStart(2, "0");
-  const menit = String(d.getMinutes()).padStart(2, "0");
-  return `${jam}:${menit}`;
+/**
+ * Data 'jam' sekarang dikirim server sebagai string "HH:mm:ss"
+ * (bukan ISO timestamp lagi, karena kolomnya udah dipisah dari
+ * tanggal di Sheet). Tinggal potong ke "HH:mm" buat ditampilin.
+ */
+function formatJamTampilan(jamString) {
+  if (!jamString) return "--:--";
+  return jamString.slice(0, 5); // "14:32:07" -> "14:32"
 }
 
 function escapeHtml(str) {
@@ -544,7 +571,7 @@ function createLeaderboardItemEl(entry) {
       <div class="leaderboard-meta">${escapeHtml(entry.cabang)}</div>
     </div>
     <div class="leaderboard-time">
-      <span class="time">${formatJamMenit(entry.timestamp)}</span>
+      <span class="time">${formatJamTampilan(entry.jam)}</span>
       <span class="leaderboard-badge ${badgeClass}">${entry.status}</span>
     </div>
   `;
@@ -568,9 +595,10 @@ function renderLeaderboard(entries) {
     return;
   }
 
-  // urutkan terbaru di atas (jaga-jaga kalau urutan dari Sheet belum urut)
-  const sorted = [...entries].sort(
-    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  // urutkan terbaru di atas — format "HH:mm:ss" bisa disort sebagai
+  // teks biasa (lexicographic) karena selalu 2 digit + leading zero
+  const sorted = [...entries].sort((a, b) =>
+    (b.jam || "").localeCompare(a.jam || "")
   );
 
   sorted.forEach((entry) => {
@@ -582,7 +610,7 @@ function renderLeaderboard(entries) {
  * Ambil data "Absen Hari Ini" dari Google Sheets lewat doGet.
  */
 async function fetchLeaderboard() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_APP_SCRIPT_URL_HERE") {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwShVgzGLwUpUwFz3lu-2rA-Cxa3wHcHMwnGZ_idRwOfxi8SLKdAFwq5lDLEYFzvD1_dg/exec") {
     els.leaderboardDate.textContent = getTodayLabel();
     els.leaderboardEmpty.textContent =
       "GOOGLE_SCRIPT_URL belum diatur di app.js.";
@@ -628,5 +656,15 @@ document.addEventListener("visibilitychange", () => {
 /* ---------------------------------------------------------
    INIT
    --------------------------------------------------------- */
+function populateEmployeeNamesDatalist() {
+  els.employeeNamesList.innerHTML = "";
+  MASTER_EMPLOYEE_NAMES.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    els.employeeNamesList.appendChild(option);
+  });
+}
+
+populateEmployeeNamesDatalist();
 updateStepIndicator(1);
 startLeaderboardPolling();
