@@ -6,23 +6,29 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwShVgzGLwUpUwFz3lu-2rA-Cxa3wHcHMwnGZ_idRwOfxi8SLKdAFwq5lDLEYFzvD1_dg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGCdcuqM-Rso1qSCcuF9mCHTZYi32-mRD9dyVOnKbYRHsMDf9teYZ6ccjyzdE0PRC8FQ/exec";
 
 /* ---------------------------------------------------------
    CONFIG — Master daftar nama karyawan (SEMUA cabang digabung)
-   Ini CUMA buat saran autocomplete pas ngetik (biar gak typo),
-   BUKAN validasi wajib pilih dari sini — karyawan tetap bisa
-   ngetik nama lain kalau memang belum ada di daftar ini.
+   Karyawan WAJIB pilih dari daftar ini (gak bisa ngetik bebas
+   lagi), biar nama di Sheets selalu konsisten/gak typo.
 
    Tambah/kurangi nama di sini kapan aja kalau ada karyawan
-   baru/keluar.
+   baru/keluar — otomatis muncul/hilang di dropdown pilihan.
    --------------------------------------------------------- */
 const MASTER_EMPLOYEE_NAMES = [
-  "Dimas", "Bu Ade", "Zharfa",
-  "Awa", "Dema",
-  "Yuyun", "Widya", "Ahyar", "Ridwan", "Yuli",
-  "Sawitri", "Etty", "Rini", "Nia", "Yuliati", "Muflihah",
+  "Dimas", "Bu Ade", "Awa", "Dema", "Ahyar", "Ridwan",
+  "Yuyun", "Yuli", "Widya", "Mak Fajri", "Bu Eti",
+  "Rini", "Nia", "Yuliati", "Muflihah",
 ];
+
+/* ---------------------------------------------------------
+   CONFIG — Karyawan shift ganda (absen MASUK-KELUAR 2x sehari)
+   Cuma buat nampilin hint di UI. Label "ke-1"/"ke-2" yang
+   BENERAN dicatat ke Sheets dihitung otomatis di server
+   (Code.gs), bukan dari sini — daftar ini murni kosmetik.
+   --------------------------------------------------------- */
+const DOUBLE_SHIFT_EMPLOYEES = ["Ahyar", "Ridwan"];
 
 /* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
@@ -37,11 +43,11 @@ const MASTER_EMPLOYEE_NAMES = [
    itu otomatis DILEWATI (tidak diblokir).
    --------------------------------------------------------- */
 const LOCATIONS_GEO = {
-"Jom Sinpasa": { lat: -6.229468, lng: 107.000581, radiusMeters: 70 },
-"Jom Santa": { lat: -6.239869, lng: 106.812129, radiusMeters: 70 },
-"Jom Galaxy": { lat: -6.274842, lng: 106.973364, radiusMeters: 70 },
-"Central Kitchen": { lat: -6.244420, lng:  107.027305, radiusMeters: 70 }, 
-"Office Puri": { lat: -6.241870, lng: 107.026397, radiusMeters: 70 }, 
+  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 50 },
+  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 50 },
+  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 50 },
+  "Central Kitchen": { lat: -6.244541804546494, lng: 107.02739743539732, radiusMeters: 50 }, // TODO: isi koordinat asli dapur
+  "Office Puri": { lat: -6.241890, lng: 107.026416, radiusMeters: 50 }, // TODO: isi koordinat asli kantor
 };
 
 /**
@@ -129,8 +135,8 @@ const els = {
   geoRetryBtn: document.getElementById("geoRetryBtn"),
   geoCancelBtn: document.getElementById("geoCancelBtn"),
 
-  employeeNameInput: document.getElementById("employeeNameInput"),
-  employeeNamesList: document.getElementById("employeeNamesList"),
+  employeeNameSelect: document.getElementById("employeeNameSelect"),
+  doubleShiftHint: document.getElementById("doubleShiftHint"),
   actionButtons: document.querySelectorAll(".action-btn"),
 
   summaryText: document.getElementById("summaryText"),
@@ -268,20 +274,19 @@ els.geoCancelBtn.addEventListener("click", () => {
    STEP 2 — PILIH NAMA & STATUS
    --------------------------------------------------------- */
 
-function cleanupTypedName(rawName) {
-  let name = rawName.trim().replace(/\s+/g, " ");
-  name = name.replace(/(.)\1{2,}/g, "$1");
-  return name;
-}
+els.employeeNameSelect.addEventListener("change", () => {
+  const isDoubleShift = DOUBLE_SHIFT_EMPLOYEES.includes(els.employeeNameSelect.value);
+  els.doubleShiftHint.hidden = !isDoubleShift;
+});
 
 els.actionButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
-    const employeeName = cleanupTypedName(els.employeeNameInput.value);
+    const employeeName = els.employeeNameSelect.value;
 
     if (!employeeName) {
-      els.employeeNameInput.focus();
-      els.employeeNameInput.style.borderColor = "var(--danger)";
-      setTimeout(() => (els.employeeNameInput.style.borderColor = ""), 900);
+      els.employeeNameSelect.focus();
+      els.employeeNameSelect.style.borderColor = "var(--danger)";
+      setTimeout(() => (els.employeeNameSelect.style.borderColor = ""), 900);
       return;
     }
 
@@ -396,7 +401,7 @@ els.captureBtn.addEventListener("click", async () => {
    KIRIM DATA KE GOOGLE APPS SCRIPT (Google Sheets backend)
    --------------------------------------------------------- */
 async function sendAttendanceToServer(payload) {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwShVgzGLwUpUwFz3lu-2rA-Cxa3wHcHMwnGZ_idRwOfxi8SLKdAFwq5lDLEYFzvD1_dg/exec") {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_APP_SCRIPT_URL_HERE") {
     console.warn(
       "GOOGLE_SCRIPT_URL belum diatur. Data tidak benar-benar terkirim ke server.",
       payload
@@ -451,7 +456,8 @@ function resetToStepOne() {
 
   // Reset UI
   document.querySelectorAll(".location-btn").forEach((b) => b.classList.remove("selected"));
-  els.employeeNameInput.value = "";
+  els.employeeNameSelect.selectedIndex = 0;
+  els.doubleShiftHint.hidden = true;
   els.activeLocationName.textContent = "-";
   els.summaryText.textContent = "-";
   els.captureBtn.disabled = false;
@@ -553,7 +559,9 @@ function createLeaderboardItemEl(entry) {
   const item = document.createElement("div");
   item.className = "leaderboard-item";
 
-  const badgeClass = entry.status === "MASUK" ? "badge-masuk" : "badge-keluar";
+  // pakai startsWith biar "MASUK 1"/"MASUK 2" (shift ganda) tetep
+  // kena warna badge yang bener, bukan cuma "MASUK" polos doang
+  const badgeClass = entry.status.startsWith("MASUK") ? "badge-masuk" : "badge-keluar";
   const initials = getInitials(entry.nama);
 
   // Kalau ada foto, tampilin fotonya. Kalau gak ada / gagal ke-load
@@ -610,7 +618,7 @@ function renderLeaderboard(entries) {
  * Ambil data "Absen Hari Ini" dari Google Sheets lewat doGet.
  */
 async function fetchLeaderboard() {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbwShVgzGLwUpUwFz3lu-2rA-Cxa3wHcHMwnGZ_idRwOfxi8SLKdAFwq5lDLEYFzvD1_dg/exec") {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_APP_SCRIPT_URL_HERE") {
     els.leaderboardDate.textContent = getTodayLabel();
     els.leaderboardEmpty.textContent =
       "GOOGLE_SCRIPT_URL belum diatur di app.js.";
@@ -656,15 +664,20 @@ document.addEventListener("visibilitychange", () => {
 /* ---------------------------------------------------------
    INIT
    --------------------------------------------------------- */
-function populateEmployeeNamesDatalist() {
-  els.employeeNamesList.innerHTML = "";
-  MASTER_EMPLOYEE_NAMES.forEach((name) => {
+function populateEmployeeNameSelect() {
+  els.employeeNameSelect.innerHTML = '<option value="" disabled selected>-- Pilih Nama --</option>';
+
+  // Diurutkan alfabetis biar gampang dicari di dropdown
+  const sortedNames = [...MASTER_EMPLOYEE_NAMES].sort((a, b) => a.localeCompare(b, "id"));
+
+  sortedNames.forEach((name) => {
     const option = document.createElement("option");
     option.value = name;
-    els.employeeNamesList.appendChild(option);
+    option.textContent = DOUBLE_SHIFT_EMPLOYEES.includes(name) ? `${name} (shift ganda)` : name;
+    els.employeeNameSelect.appendChild(option);
   });
 }
 
-populateEmployeeNamesDatalist();
+populateEmployeeNameSelect();
 updateStepIndicator(1);
 startLeaderboardPolling();
