@@ -17,9 +17,9 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGCdcuqM-Rso
    baru/keluar — otomatis muncul/hilang di dropdown pilihan.
    --------------------------------------------------------- */
 const MASTER_EMPLOYEE_NAMES = [
-  "Dimas", "Bu Ade", "Awa", "Dema", "Ahyar", "Ridwan",
-  "Yuyun", "Yuli", "Widya", "Mak Fajri", "Bu Eti",
-  "Rini", "Nia", "Yuliati", "Muflihah",
+  "Dimas Ahmadi", "Ade Safitri","Zharfa", "Najwa", "Dema", "Yuyun", "Widyawati",
+  "Yulia Fibriyani", "Ahyar", "Ridwan", "Sawitri", "Etty Kusharsari",
+  "Rini.S", "Nia Kurniasih", "Yuliati", "Muflihah",
 ];
 
 /* ---------------------------------------------------------
