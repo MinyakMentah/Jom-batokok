@@ -6,7 +6,7 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGCdcuqM-Rso1qSCcuF9mCHTZYi32-mRD9dyVOnKbYRHsMDf9teYZ6ccjyzdE0PRC8FQ/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxJHwAB12G-ECxiWHE5V4KD0aHZxIhj_qnV8GwUfLRWvnpJ02jcyYXeaDnjnLowCylnA/exec";
 
 /* ---------------------------------------------------------
    CONFIG — Master daftar nama karyawan (SEMUA cabang digabung)
@@ -17,18 +17,10 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGCdcuqM-Rso
    baru/keluar — otomatis muncul/hilang di dropdown pilihan.
    --------------------------------------------------------- */
 const MASTER_EMPLOYEE_NAMES = [
-  "Dimas Ahmadi", "Ade Safitri","Zharfa", "Najwa", "Dema", "Yuyun", "Widyawati",
-  "Yulia Fibriyani", "Ahyar", "Ridwan", "Sawitri", "Etty Kusharsari",
-  "Rini.S", "Nia Kurniasih", "Yuliati", "Muflihah",
+"Dimas ahmadi", "Ade safitri", "Zharfa", "Najwa", "Dema", "Yuyun", 
+"Widyawati","Yulia fibriyani", "Ahyar", "Ridwan", "Sawitri", "Etty kusharsari", "Rini S.", "Nia kurniasih",
+"Yuliati", "Muflihah"
 ];
-
-/* ---------------------------------------------------------
-   CONFIG — Karyawan shift ganda (absen MASUK-KELUAR 2x sehari)
-   Cuma buat nampilin hint di UI. Label "ke-1"/"ke-2" yang
-   BENERAN dicatat ke Sheets dihitung otomatis di server
-   (Code.gs), bukan dari sini — daftar ini murni kosmetik.
-   --------------------------------------------------------- */
-const DOUBLE_SHIFT_EMPLOYEES = ["Ahyar", "Ridwan"];
 
 /* ---------------------------------------------------------
    CONFIG — Sistem geofencing (absen hanya bisa di area lokasi)
@@ -43,11 +35,11 @@ const DOUBLE_SHIFT_EMPLOYEES = ["Ahyar", "Ridwan"];
    itu otomatis DILEWATI (tidak diblokir).
    --------------------------------------------------------- */
 const LOCATIONS_GEO = {
-  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 50 },
-  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 50 },
-  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 50 },
-  "Central Kitchen": { lat: -6.244541804546494, lng: 107.02739743539732, radiusMeters: 50 }, // TODO: isi koordinat asli dapur
-  "Office Puri": { lat: -6.241890, lng: 107.026416, radiusMeters: 50 }, // TODO: isi koordinat asli kantor
+  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 500 },
+  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 500 },
+  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 500 },
+  "Central Kitchen": { lat: null, lng: null, radiusMeters: 500 }, // TODO: isi koordinat asli dapur
+  "Office Puri": { lat: null, lng: null, radiusMeters: 500 }, // TODO: isi koordinat asli kantor
 };
 
 /**
@@ -136,7 +128,6 @@ const els = {
   geoCancelBtn: document.getElementById("geoCancelBtn"),
 
   employeeNameSelect: document.getElementById("employeeNameSelect"),
-  doubleShiftHint: document.getElementById("doubleShiftHint"),
   actionButtons: document.querySelectorAll(".action-btn"),
 
   summaryText: document.getElementById("summaryText"),
@@ -273,11 +264,6 @@ els.geoCancelBtn.addEventListener("click", () => {
 /* ---------------------------------------------------------
    STEP 2 — PILIH NAMA & STATUS
    --------------------------------------------------------- */
-
-els.employeeNameSelect.addEventListener("change", () => {
-  const isDoubleShift = DOUBLE_SHIFT_EMPLOYEES.includes(els.employeeNameSelect.value);
-  els.doubleShiftHint.hidden = !isDoubleShift;
-});
 
 els.actionButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -457,7 +443,6 @@ function resetToStepOne() {
   // Reset UI
   document.querySelectorAll(".location-btn").forEach((b) => b.classList.remove("selected"));
   els.employeeNameSelect.selectedIndex = 0;
-  els.doubleShiftHint.hidden = true;
   els.activeLocationName.textContent = "-";
   els.summaryText.textContent = "-";
   els.captureBtn.disabled = false;
@@ -673,7 +658,7 @@ function populateEmployeeNameSelect() {
   sortedNames.forEach((name) => {
     const option = document.createElement("option");
     option.value = name;
-    option.textContent = DOUBLE_SHIFT_EMPLOYEES.includes(name) ? `${name} (shift ganda)` : name;
+    option.textContent = name;
     els.employeeNameSelect.appendChild(option);
   });
 }
