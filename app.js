@@ -611,7 +611,17 @@ async function fetchLeaderboard() {
   }
 
   try {
-    const response = await fetch(GOOGLE_SCRIPT_URL, { method: "GET" });
+    // "cache: no-store" + query param unik (timestamp) DUA-DUANYA
+    // dipasang biar dijamin gak ada yang ke-cache oleh browser.
+    // Tanpa ini, browser bisa "males" nge-fetch ulang karena
+    // menganggap URL-nya sama persis kayak request sebelumnya,
+    // padahal isi Sheets-nya udah berubah (makanya leaderboard
+    // kelihatan "macet"/gak update walau datanya di Sheets udah beda).
+    const cacheBustedUrl = `${GOOGLE_SCRIPT_URL}?_=${Date.now()}`;
+    const response = await fetch(cacheBustedUrl, {
+      method: "GET",
+      cache: "no-store",
+    });
     const json = await response.json();
 
     if (json.result === "success") {
