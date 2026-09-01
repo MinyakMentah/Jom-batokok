@@ -6,7 +6,7 @@
 /* ---------------------------------------------------------
    CONFIG — Arahkan URL ini ke Web App Google Apps Script Anda
    --------------------------------------------------------- */
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxJHwAB12G-ECxiWHE5V4KD0aHZxIhj_qnV8GwUfLRWvnpJ02jcyYXeaDnjnLowCylnA/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFmNHavAIn7kIenotdlZ3PZ5Pj-J0wh7Kv9Vr97-lj2tPorFZ2u8prxb3OZ9O_xz7AVg/exec";
 
 /* ---------------------------------------------------------
    CONFIG — Master daftar nama karyawan (SEMUA cabang digabung)
