@@ -18,7 +18,7 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFmNHavAIn7k
    --------------------------------------------------------- */
 const MASTER_EMPLOYEE_NAMES = [
 "Dimas ahmadi", "Ade safitri", "Zharfa", "Najwa", "Dema", "Yuyun", 
-"Widyawati","Yulia fibriyani", "Ahyar", "Ridwan", "Sawitri", "Etty kusharsari", "Rini S.", "Nia kurniasih",
+"Widyawati","Yulia fibriyani", "Ahyar","Radin", "Ridwan", "Sawitri", "Etty kusharsari", "Rini S.", "Nia kurniasih",
 "Yuliati", "Muflihah"
 ];
 
@@ -35,11 +35,11 @@ const MASTER_EMPLOYEE_NAMES = [
    itu otomatis DILEWATI (tidak diblokir).
    --------------------------------------------------------- */
 const LOCATIONS_GEO = {
-  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 500 },
-  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 500 },
-  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 500 },
-  "Central Kitchen": { lat: null, lng: null, radiusMeters: 500 }, // TODO: isi koordinat asli dapur
-  "Office Puri": { lat: null, lng: null, radiusMeters: 500 }, // TODO: isi koordinat asli kantor
+  "Jom Sinpasa": { lat: -6.2294775, lng: 107.0005841, radiusMeters: 50 },
+  "Jom Santa": { lat: -6.2398766, lng: 106.8121225, radiusMeters: 50 },
+  "Jom Galaxy": { lat: -6.2748538, lng: 106.9733628, radiusMeters: 50 },
+  "Central Kitchen": { lat: null, lng: null, radiusMeters: 50 }, // TODO: isi koordinat asli dapur
+  "Office Puri": { lat: null, lng: null, radiusMeters: 50 }, // TODO: isi koordinat asli kantor
 };
 
 /**
